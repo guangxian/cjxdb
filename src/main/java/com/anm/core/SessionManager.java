@@ -13,7 +13,7 @@ public class SessionManager {
     private static ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
 
     public static Connection getConnection() throws SQLException {
-        if (connectionHolder.get() == null) {
+        if (connectionHolder.get() == null || connectionHolder.get().isClosed()) {
             Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
             connectionHolder.set(connection);
         }
@@ -22,7 +22,7 @@ public class SessionManager {
 
     public static void close() throws SQLException {
         Connection connection = connectionHolder.get();
-        if (connection != null) {
+        if (connection != null && !connection.isClosed()) {
             connection.close();
             connectionHolder.remove();
         }

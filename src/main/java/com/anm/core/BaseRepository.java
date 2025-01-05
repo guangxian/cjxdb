@@ -2,6 +2,7 @@ package com.anm.core;
 
 // BaseRepository.java
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 
@@ -44,8 +45,17 @@ public abstract class BaseRepository<T> {
             ResultSet generatedKeys = statement.getGeneratedKeys();
             if (generatedKeys.next() && idField != null) {
                 idField.setAccessible(true);
-                idField.set(entity, generatedKeys.getObject(1));
+                Object generatedKey = generatedKeys.getObject(1);
+                if (generatedKey instanceof BigInteger) {
+                    idField.set(entity, ((BigInteger) generatedKey).longValue());
+                } else if (generatedKey instanceof Number) {
+                    idField.set(entity, ((Number) generatedKey).longValue());
+                } else {
+                    idField.set(entity, generatedKey);
+                }
             }
+        } finally {
+            SessionManager.close();
         }
         return entity;
     }
@@ -59,6 +69,8 @@ public abstract class BaseRepository<T> {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.executeUpdate();
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -88,6 +100,8 @@ public abstract class BaseRepository<T> {
                 statement.setObject(i + 1, params.get(i));
             }
             statement.executeUpdate();
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -105,6 +119,8 @@ public abstract class BaseRepository<T> {
                 return Optional.of(mapResultSetToEntity(resultSet));
             }
             return Optional.empty();
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -125,6 +141,8 @@ public abstract class BaseRepository<T> {
                 return Optional.of(mapResultSetToEntity(resultSet));
             }
             return Optional.empty();
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -141,6 +159,8 @@ public abstract class BaseRepository<T> {
             }
             ResultSet resultSet = statement.executeQuery();
             return mapResultSetToList(resultSet);
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -162,6 +182,8 @@ public abstract class BaseRepository<T> {
             List<T> records = mapResultSetToList(resultSet);
             long total = count(wrapper);
             return new Page<>(records, total, current, size);
+        } finally {
+            SessionManager.close();
         }
     }
 
@@ -181,6 +203,27 @@ public abstract class BaseRepository<T> {
                 return resultSet.getLong(1);
             }
             return 0;
+        } finally {
+            SessionManager.close();
+        }
+    }
+
+    public boolean exists(QueryWrapper<T> wrapper) throws SQLException {
+        String tableName = clazz.getAnnotation(Table.class).value();
+        StringBuilder sql = new StringBuilder("SELECT 1 FROM " + tableName + " WHERE ");
+        List<Object> params = new ArrayList<>();
+        buildConditions(wrapper, sql, params);
+        sql.append(" LIMIT 1");
+
+        try (Connection connection = SessionManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; params != null && i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next();
+        } finally {
+            SessionManager.close();
         }
     }
 
