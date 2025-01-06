@@ -4,6 +4,7 @@ import com.anm.core.Page;
 import com.anm.core.QueryWrapper;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ public class Test {
             User user = new User();
             user.setUsername("li");
             user.setPassword("123456");
+            user.setPhoneNumber("13800000");
             User insertedUser = userRepository.insert(user);
             System.out.println("Inserted User ID: " + insertedUser.getId());
 
@@ -41,7 +43,13 @@ public class Test {
 
             // 动态查询
             QueryWrapper<User> wrapper = new QueryWrapper<>();
-            wrapper.eq("username", "li").orderBy("id", "desc");
+            wrapper.eq("age", 16)
+                    .in("city", Arrays.asList("北海市", "上海市", "北京市"))
+                    .like("name", "li")
+                    .leftJoin("dept", "name", "研发部")
+                    .leftJoin("dept.company", "name", "A公司")
+                    .leftJoin("role", "id", 1L)
+                    .orderBy("id", "desc");
             List<User> users = userRepository.selectList(wrapper);
             users.forEach(u -> System.out.println("User: " + u.getUsername()));
 

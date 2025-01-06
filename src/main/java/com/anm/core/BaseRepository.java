@@ -5,8 +5,10 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
 
 public abstract class BaseRepository<T> {
+    private static final Logger LOGGER = Logger.getLogger(BaseRepository.class.getName());
     private final Class<T> clazz;
 
     @SuppressWarnings("unchecked")
@@ -35,6 +37,8 @@ public abstract class BaseRepository<T> {
         sql.delete(sql.length() - 2, sql.length()).append(") ");
         values.delete(values.length() - 2, values.length()).append(")");
         sql.append(values);
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
@@ -65,6 +69,8 @@ public abstract class BaseRepository<T> {
         String idColumn = getIdColumn();
         String sql = "DELETE FROM " + tableName + " WHERE " + idColumn + " = ?";
 
+        LOGGER.info("Executing SQL: " + sql);
+
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
@@ -94,6 +100,8 @@ public abstract class BaseRepository<T> {
         sql.append(" WHERE ").append(getIdColumn()).append(" = ?");
         params.add(idValue);
 
+        LOGGER.info("Executing SQL: " + sql.toString());
+
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             for (int i = 0; params != null && i < params.size(); i++) {
@@ -109,6 +117,8 @@ public abstract class BaseRepository<T> {
         String tableName = clazz.getAnnotation(Table.class).value();
         String idColumn = getIdColumn();
         String sql = "SELECT * FROM " + tableName + " WHERE " + idColumn + " = ?";
+
+        LOGGER.info("Executing SQL: " + sql);
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -126,10 +136,13 @@ public abstract class BaseRepository<T> {
 
     public Optional<T> selectOne(QueryWrapper<T> wrapper) throws SQLException, InstantiationException, IllegalAccessException {
         String tableName = clazz.getAnnotation(Table.class).value();
-        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " WHERE ");
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " ");
         List<Object> params = new ArrayList<>();
+        buildJoins(wrapper, sql);
         buildConditions(wrapper, sql, params);
         sql.append(" LIMIT 1");
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -148,9 +161,12 @@ public abstract class BaseRepository<T> {
 
     public List<T> selectList(QueryWrapper<T> wrapper) throws SQLException, InstantiationException, IllegalAccessException {
         String tableName = clazz.getAnnotation(Table.class).value();
-        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " WHERE ");
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " ");
         List<Object> params = new ArrayList<>();
+        buildJoins(wrapper, sql);
         buildConditions(wrapper, sql, params);
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -168,10 +184,13 @@ public abstract class BaseRepository<T> {
         String tableName = clazz.getAnnotation(Table.class).value();
         int offset = (current - 1) * size;
 
-        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " WHERE ");
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName + " ");
         List<Object> params = new ArrayList<>();
+        buildJoins(wrapper, sql);
         buildConditions(wrapper, sql, params);
         sql.append(" LIMIT ").append(size).append(" OFFSET ").append(offset);
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -189,9 +208,12 @@ public abstract class BaseRepository<T> {
 
     public long count(QueryWrapper<T> wrapper) throws SQLException {
         String tableName = clazz.getAnnotation(Table.class).value();
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM " + tableName + " WHERE ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM " + tableName + " ");
         List<Object> params = new ArrayList<>();
+        buildJoins(wrapper, sql);
         buildConditions(wrapper, sql, params);
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -210,10 +232,13 @@ public abstract class BaseRepository<T> {
 
     public boolean exists(QueryWrapper<T> wrapper) throws SQLException {
         String tableName = clazz.getAnnotation(Table.class).value();
-        StringBuilder sql = new StringBuilder("SELECT 1 FROM " + tableName + " WHERE ");
+        StringBuilder sql = new StringBuilder("SELECT 1 FROM " + tableName + " ");
         List<Object> params = new ArrayList<>();
+        buildJoins(wrapper, sql);
         buildConditions(wrapper, sql, params);
         sql.append(" LIMIT 1");
+
+        LOGGER.info("Executing SQL: " + sql.toString());
 
         try (Connection connection = SessionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -236,6 +261,10 @@ public abstract class BaseRepository<T> {
         if (!wrapper.getOrderBy().isEmpty()) {
             sql.append(" ORDER BY ").append(String.join(", ", wrapper.getOrderBy()));
         }
+    }
+
+    private void buildJoins(QueryWrapper<T> wrapper, StringBuilder sql) {
+        wrapper.getJoins().forEach(join -> sql.append(join).append(" "));
     }
 
     private String getIdColumn() {
