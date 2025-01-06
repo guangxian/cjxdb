@@ -17,7 +17,7 @@ public class User implements Serializable {
     private String phoneNumber;
     private String name;
     private Integer age;
-    private Dept dept;
+//    private Dept dept;
     private Role role;
     private String city;
 
@@ -67,14 +67,6 @@ public class User implements Serializable {
 
     public void setAge(Integer age) {
         this.age = age;
-    }
-
-    public Dept getDept() {
-        return dept;
-    }
-
-    public void setDept(Dept dept) {
-        this.dept = dept;
     }
 
     public Role getRole() {

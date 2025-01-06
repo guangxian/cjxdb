@@ -15,12 +15,15 @@ public class Test {
     public static void main(String[] args) {
         try {
             UserRepository userRepository = new UserRepository();
+            RoleRepository roleRepository = new RoleRepository();
+            Role role = roleRepository.selectById(1L).orElseThrow(() -> new RuntimeException("role不存在"));
 
             // 插入用户
             User user = new User();
             user.setUsername("li");
             user.setPassword("123456");
             user.setPhoneNumber("13800000");
+            user.setRole(role);
             User insertedUser = userRepository.insert(user);
             System.out.println("Inserted User ID: " + insertedUser.getId());
 
