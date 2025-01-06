@@ -5,6 +5,9 @@ import com.anm.core.Table;
 
 import java.io.Serializable;
 
+/**
+ * 公司
+ */
 @Table("tb_company")
 public class Company implements Serializable {
     @Id

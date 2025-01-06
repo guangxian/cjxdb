@@ -7,6 +7,10 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * 核心支持
+ * @param <T>
+ */
 public abstract class BaseRepository<T> {
     private static final Logger LOGGER = Logger.getLogger(BaseRepository.class.getName());
     private final Class<T> clazz;

@@ -6,6 +6,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+/**
+ * 数据库连接
+ */
 public class SessionManager {
     private static final String URL = "jdbc:mysql://gz-cynosdbmysql-grp-mh2itlkp.sql.tencentcdb.com:29335/aaaaa?nullCatalogMeansCurrent=true&useUnicode=true&serverTimezone=GMT%2b8&characterEncoding=utf-8&useSSL=true";
     private static final String USER = "root";

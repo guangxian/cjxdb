@@ -21,7 +21,7 @@ public class App
     {
         System.out.println( "Hello World!" );
 
-        System.out.println(Arrays.asList("sdf", "sdf"));
+        System.out.println(Arrays.asList("sdf1", "sdf"));
         String url = "jdbc:mysql://gz-cynosdbmysql-grp-mh2itlkp.sql.tencentcdb.com:29335/aaaaa?nullCatalogMeansCurrent=true&useUnicode=true&serverTimezone=GMT%2b8&characterEncoding=utf-8&useSSL=true";
         String username = "root";
         String password = "123456mysql";

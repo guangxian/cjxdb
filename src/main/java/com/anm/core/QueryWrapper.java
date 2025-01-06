@@ -3,6 +3,10 @@ package com.anm.core;
 // QueryWrapper.java
 import java.util.*;
 
+/**
+ * 查询
+ * @param <T>
+ */
 public class QueryWrapper<T> {
     private final Map<String, Object> conditions = new HashMap<>();
     private final List<String> orderBy = new ArrayList<>();

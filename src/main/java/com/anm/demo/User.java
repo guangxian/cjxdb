@@ -5,6 +5,9 @@ import com.anm.core.Table;
 
 import java.io.Serializable;
 
+/**
+ * 用户
+ */
 @Table("tb_user")
 public class User implements Serializable {
     @Id
