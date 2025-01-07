@@ -30,9 +30,17 @@ public abstract class BaseRepository<T> {
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
             if (field.getAnnotation(Id.class) == null) {
-                sql.append(field.getName()).append(", ");
+                String columnName = convertToSnakeCase(field.getName());
+                if (field.getType().isAnnotationPresent(Table.class)) {
+                    columnName += "_id";
+                    Field foreignKeyField = getIdField(field.getType());
+                    foreignKeyField.setAccessible(true);
+                    params.add(foreignKeyField.get(field.get(entity)));
+                } else {
+                    params.add(field.get(entity));
+                }
+                sql.append(columnName).append(", ");
                 values.append("?, ");
-                params.add(field.get(entity));
             } else {
                 idField = field;
             }
@@ -66,6 +74,29 @@ public abstract class BaseRepository<T> {
             SessionManager.close();
         }
         return entity;
+    }
+
+    private String convertToSnakeCase(String camelCase) {
+        StringBuilder result = new StringBuilder();
+        result.append(Character.toLowerCase(camelCase.charAt(0)));
+        for (int i = 1; i < camelCase.length(); i++) {
+            char c = camelCase.charAt(i);
+            if (Character.isUpperCase(c)) {
+                result.append('_').append(Character.toLowerCase(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    private Field getIdField(Class<?> clazz) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Id.class)) {
+                return field;
+            }
+        }
+        throw new RuntimeException("No @Id field found in class " + clazz.getSimpleName());
     }
 
     public void deleteById(Long id) throws SQLException {
