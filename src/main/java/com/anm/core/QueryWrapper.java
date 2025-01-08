@@ -42,12 +42,6 @@ public class QueryWrapper<T> {
         return this;
     }
 
-    public QueryWrapper<T> leftJoin(String table, String column, Object value) {
-        joins.add("LEFT JOIN " + table + " ON " + table + "." + column + " = ?");
-        conditions.put(table + "." + column, value);
-        return this;
-    }
-
     public Map<String, Object> getConditions() {
         return conditions;
     }
